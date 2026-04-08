@@ -1,0 +1,14 @@
+# Virtual environment
+.venv/
+
+# Claude IDE settings
+.claude/
+
+# Sample/test images
+eye.png
+smiley.png
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo

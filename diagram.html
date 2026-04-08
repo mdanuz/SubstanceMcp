@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SP MCP — Cyberpunk</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #070b14;
+    color: #c8d8f0;
+    font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
+    padding: 48px 40px 80px;
+    max-width: 1160px;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* ambient glow blobs */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(255,0,180,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .glow-blob {
+    position: fixed;
+    bottom: -200px; right: -100px;
+    width: 700px; height: 500px;
+    background: radial-gradient(circle, rgba(0,220,255,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    margin-bottom: 52px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(0,220,255,0.15);
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0;
+    width: 120px; height: 1px;
+    background: #00dcff;
+    box-shadow: 0 0 12px #00dcff;
+  }
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: #ff00b4;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    text-shadow: 0 0 8px #ff00b4;
+  }
+  h1 {
+    font-size: 38px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.05;
+    letter-spacing: -0.5px;
+    text-shadow: 0 0 30px rgba(0,220,255,0.3);
+  }
+  h1 .c { color: #00dcff; text-shadow: 0 0 20px #00dcff; }
+  h1 .m { color: #ff00b4; text-shadow: 0 0 20px #ff00b4; }
+  .header-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: #3a5070;
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+  .header-badges {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    padding-top: 6px;
+  }
+  .hb {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 6px 14px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .hb.maya  { border: 1px solid #1a6fff; color: #1a6fff; background: rgba(26,111,255,0.08); box-shadow: 0 0 10px rgba(26,111,255,0.2); }
+  .hb.sp    { border: 1px solid #ff00b4; color: #ff00b4; background: rgba(255,0,180,0.08); box-shadow: 0 0 10px rgba(255,0,180,0.2); }
+  .hb.ai    { border: 1px solid #00dcff; color: #00dcff; background: rgba(0,220,255,0.08); box-shadow: 0 0 10px rgba(0,220,255,0.2); }
+
+  /* ── SECTION LABEL ── */
+  .sec {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #1a6fff;
+    margin-bottom: 16px;
+    margin-top: 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-shadow: 0 0 8px rgba(26,111,255,0.5);
+  }
+  .sec::before { content: '//'; color: #ff00b4; margin-right: -4px; }
+  .sec::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(26,111,255,0.4), transparent);
+  }
+
+  /* ── PIPELINE ── */
+  .pipe {
+    display: flex;
+    align-items: center;
+    background: #0b0f1a;
+    border: 1px solid rgba(0,220,255,0.12);
+    border-radius: 4px;
+    padding: 24px 18px;
+    gap: 0;
+    overflow-x: auto;
+    position: relative;
+  }
+  .pipe::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, #ff00b4, #00dcff, transparent);
+    opacity: 0.5;
+  }
+  .pstep {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 85px;
+  }
+  .picon {
+    width: 58px; height: 58px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    position: relative;
+  }
+  .picon.maya  {
+    background: #060d1c;
+    border: 1px solid #1a6fff;
+    box-shadow: 0 0 12px rgba(26,111,255,0.25), inset 0 0 20px rgba(26,111,255,0.05);
+  }
+  .picon.sp    {
+    background: #120010;
+    border: 1px solid #ff00b4;
+    box-shadow: 0 0 12px rgba(255,0,180,0.25), inset 0 0 20px rgba(255,0,180,0.05);
+  }
+  .picon.comfy {
+    background: #00100f;
+    border: 1px solid #00dcff;
+    box-shadow: 0 0 12px rgba(0,220,255,0.25), inset 0 0 20px rgba(0,220,255,0.05);
+  }
+  .pnum {
+    position: absolute;
+    top: -7px; right: -7px;
+    width: 15px; height: 15px;
+    border-radius: 1px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    background: #070b14;
+    color: #3a5070;
+    border: 1px solid #1a2a3a;
+  }
+  .plabel {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.25;
+    letter-spacing: 0.5px;
+  }
+  .plabel.maya  { color: #5090e8; }
+  .plabel.sp    { color: #e060b0; }
+  .plabel.comfy { color: #40c8d0; }
+  .parr {
+    color: #1a2a3a;
+    font-size: 20px;
+    flex-shrink: 0;
+    padding: 0 3px;
+    margin-bottom: 20px;
+    text-shadow: 0 0 6px rgba(0,220,255,0.3);
+  }
+
+  /* ── CAPABILITIES ── */
+  .caps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .cap {
+    background: #0b0f1a;
+    border: 1px solid #0e1a28;
+    border-radius: 4px;
+    padding: 18px 16px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: default;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .cap::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .cap.sp::after   { background: #ff00b4; box-shadow: 0 0 8px #ff00b4; }
+  .cap.maya::after { background: #1a6fff; box-shadow: 0 0 8px #1a6fff; }
+  .cap.ai::after   { background: #00dcff; box-shadow: 0 0 8px #00dcff; }
+  .cap:hover { background: #0e1422; }
+  .cap:hover::after { opacity: 1; }
+  .cap-icon { font-size: 26px; }
+  .cap-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #c8d8f0;
+    letter-spacing: 0.3px;
+  }
+  .ctag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+  .ctag.maya { border: 1px solid #1a6fff; color: #1a6fff; background: rgba(26,111,255,0.08); }
+  .ctag.sp   { border: 1px solid #ff00b4; color: #ff00b4; background: rgba(255,0,180,0.08); }
+  .ctag.ai   { border: 1px solid #00dcff; color: #00dcff; background: rgba(0,220,255,0.08); }
+
+  /* ── AI MODELS ── */
+  .models {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .model {
+    background: #0b0f1a;
+    border: 1px solid #0e1a28;
+    border-radius: 4px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .model::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: linear-gradient(180deg, #ff00b4, #00dcff);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .model:hover { border-color: rgba(0,220,255,0.2); }
+  .model:hover::before { opacity: 1; }
+  .model-icon { font-size: 32px; flex-shrink: 0; }
+  .model-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.3px;
+    margin-bottom: 3px;
+  }
+  .model-desc {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: #3a5070;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── CURRENT PROJECT ── */
+  .project {
+    background: #0b0f1a;
+    border: 1px solid #0e1a28;
+    border-radius: 4px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    position: relative;
+  }
+  .project::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, #ff00b4, #00dcff, transparent);
+    opacity: 0.4;
+  }
+  .project-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: #3a5070;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+  .ts {
+    background: rgba(255,0,180,0.06);
+    border: 1px solid rgba(255,0,180,0.25);
+    color: #e060b0;
+    border-radius: 2px;
+    padding: 6px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .ts:hover {
+    background: rgba(255,0,180,0.12);
+    box-shadow: 0 0 10px rgba(255,0,180,0.2);
+  }
+</style>
+</head>
+<body>
+<div class="glow-blob"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="eyebrow">// MCP_SYSTEM · ONLINE</div>
+      <h1>Your <span class="c">Substance</span><br><span class="m">Painter</span> AI Pipeline</h1>
+      <div class="header-sub">CLAUDE CONTROLS MAYA · SUBSTANCE PAINTER · COMFYUI</div>
+    </div>
+    <div class="header-badges">
+      <div class="hb maya">Maya</div>
+      <div class="hb sp">Substance Painter</div>
+      <div class="hb ai">ComfyUI</div>
+    </div>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<div class="sec">Workflow</div>
+<div class="pipe">
+
+  <div class="pstep">
+    <div class="picon maya"><span class="pnum">1</span>🦴</div>
+    <div class="plabel maya">Export<br>from Maya</div>
+  </div>
+  <div class="parr">›</div>
+
+  <div class="pstep">
+    <div class="picon sp"><span class="pnum">2</span>📂</div>
+    <div class="plabel sp">New SP<br>Project</div>
+  </div>
+  <div class="parr">›</div>
+
+  <div class="pstep">
+    <div class="picon sp"><span class="pnum">3</span>🥧</div>
+    <div class="plabel sp">Bake<br>Maps</div>
+  </div>
+  <div class="parr">›</div>
+
+  <div class="pstep">
+    <div class="picon sp"><span class="pnum">4</span>✨</div>
+    <div class="plabel sp">Apply<br>Material</div>
+  </div>
+  <div class="parr">›</div>
+
+  <div class="pstep">
+    <div class="picon comfy"><span class="pnum">5</span>🤖</div>
+    <div class="plabel comfy">AI<br>Texture</div>
+  </div>
+  <div class="parr">›</div>
+
+  <div class="pstep">
+    <div class="picon comfy"><span class="pnum">6</span>🧵</div>
+    <div class="plabel comfy">Fix<br>Seams</div>
+  </div>
+  <div class="parr">›</div>
+
+  <div class="pstep">
+    <div class="picon sp"><span class="pnum">7</span>📤</div>
+    <div class="plabel sp">Export<br>Textures</div>
+  </div>
+  <div class="parr">›</div>
+
+  <div class="pstep">
+    <div class="picon maya"><span class="pnum">8</span>🎬</div>
+    <div class="plabel maya">Back<br>to Maya</div>
+  </div>
+
+</div>
+
+<!-- CAPABILITIES -->
+<div class="sec">What You Can Ask</div>
+<div class="caps">
+
+  <div class="cap sp">
+    <div class="cap-icon">🗂️</div>
+    <div class="cap-title">Project Management</div>
+    <div class="ctag sp">SP</div>
+  </div>
+
+  <div class="cap sp">
+    <div class="cap-icon">🥧</div>
+    <div class="cap-title">Bake Maps</div>
+    <div class="ctag sp">SP</div>
+  </div>
+
+  <div class="cap sp">
+    <div class="cap-icon">📚</div>
+    <div class="cap-title">Build Layer Stacks</div>
+    <div class="ctag sp">SP</div>
+  </div>
+
+  <div class="cap sp">
+    <div class="cap-icon">✨</div>
+    <div class="cap-title">Apply Smart Materials</div>
+    <div class="ctag sp">SP</div>
+  </div>
+
+  <div class="cap ai">
+    <div class="cap-icon">🤖</div>
+    <div class="cap-title">Generate AI Textures</div>
+    <div class="ctag ai">ComfyUI</div>
+  </div>
+
+  <div class="cap ai">
+    <div class="cap-icon">🧵</div>
+    <div class="cap-title">Fix Seams</div>
+    <div class="ctag ai">ComfyUI</div>
+  </div>
+
+  <div class="cap sp">
+    <div class="cap-icon">📤</div>
+    <div class="cap-title">Export Textures</div>
+    <div class="ctag sp">SP</div>
+  </div>
+
+  <div class="cap maya">
+    <div class="cap-icon">🦴</div>
+    <div class="cap-title">Maya Bridge</div>
+    <div class="ctag maya">Maya</div>
+  </div>
+
+</div>
+
+<!-- AI MODELS -->
+<div class="sec">AI Models</div>
+<div class="models">
+
+  <div class="model">
+    <div class="model-icon">⚡</div>
+    <div>
+      <div class="model-name">ZIT Luneva</div>
+      <div class="model-desc">CINEMATIC · HERO ASSETS</div>
+    </div>
+  </div>
+
+  <div class="model">
+    <div class="model-icon">🍌</div>
+    <div>
+      <div class="model-name">Nano Banana 2</div>
+      <div class="model-desc">FAST ITERATIONS · GEMINI AI</div>
+    </div>
+  </div>
+
+  <div class="model">
+    <div class="model-icon">🎥</div>
+    <div>
+      <div class="model-name">Qwen MultCam</div>
+      <div class="model-desc">DEPTH-AWARE · MULTI-ANGLE · ECORCHÉ</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CURRENT PROJECT -->
+<div class="sec">Currently Open</div>
+<div class="project">
+  <div class="project-label">Texture Sets //</div>
+  <div class="ts">Body_Lo</div>
+  <div class="ts">Eyeball_Lo</div>
+  <div class="ts">Gums_Lo</div>
+  <div class="ts">Shorts_Lo</div>
+  <div class="ts">Teeth_Lo</div>
+</div>
+
+</body>
+</html>
